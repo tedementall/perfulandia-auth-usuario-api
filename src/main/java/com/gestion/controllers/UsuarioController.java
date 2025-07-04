@@ -20,6 +20,7 @@ import com.gestion.models.Usuario;
 import com.gestion.services.UsuarioService;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.hateoas.Link;
 
 @RestController
 @RequestMapping("/api/usuarios")
@@ -60,5 +61,31 @@ public class UsuarioController {
     public ResponseEntity<Void> eliminar(@PathVariable Integer id) {
         service.eliminarUsuario(id);
         return ResponseEntity.noContent().build();
+    }
+
+     @GetMapping("/hateoas/{id}")
+    public UsuarioDTO obtenerHATEOAS(@PathVariable Integer id) {
+        UsuarioDTO dto = service.buscarUsuarioPorId(id);
+        
+        
+        dto.add(Link.of("http://localhost:8888/api/proxy/usuarios/" + dto.getId()).withSelfRel());
+        dto.add(Link.of("http://localhost:8888/api/proxy/usuarios/" + dto.getId()).withRel("Modificar HATEOAS").withType("PUT"));
+        dto.add(Link.of("http://localhost:8888/api/proxy/usuarios/" + dto.getId()).withRel("Eliminar HATEOAS").withType("DELETE"));
+
+        return dto;
+    }
+
+    //METODO HATEOAS para listar todos los productos utilizando HATEOAS
+    @GetMapping("/hateoas")
+    public List<UsuarioDTO> obtenerTodosHATEOAS() {
+        List<UsuarioDTO> lista = service.listarUsuarios();
+
+        for (UsuarioDTO dto : lista) {
+           
+            dto.add(Link.of("http://localhost:8888/api/proxy/usuarios").withRel("Get todos HATEOAS"));
+            dto.add(Link.of("http://localhost:8888/api/proxy/usuarios/" + dto.getId()).withRel("Crear HATEOAS").withType("POST"));
+        }
+
+        return lista;
     }
 }
